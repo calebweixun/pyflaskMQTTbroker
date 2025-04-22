@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Broker 管理後台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div class="sidebar">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <h4 class="mb-0 me-3"><i class="bi bi-broadcast me-2"></i> MQTT Broker</h4>
+                <ul class="nav nav-pills" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab" role="tab">
+                            <i class="bi bi-speedometer2"></i><span>儀表板</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings-tab" data-bs-toggle="tab" role="tab">
+                            <i class="bi bi-gear"></i><span>設置</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-flex align-items-center">
+                <div id="broker-status-indicator" class="me-3">
+                    <span class="status-badge status-badge-stopped">已停止</span>
+                </div>
+                <div>
+                    <button id="start-broker" class="btn btn-success btn-sm me-1">
+                        <i class="bi bi-play-fill"></i> 啟動
+                    </button>
+                    <button id="stop-broker" class="btn btn-danger btn-sm me-1" disabled>
+                        <i class="bi bi-stop-fill"></i> 停止
+                    </button>
+                    <button id="pause-broker" class="btn btn-warning btn-sm" disabled>
+                        <i class="bi bi-pause-fill"></i> 暫停
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div class="main-content">
+        <div class="tab-content">
+            <!-- 儀表板 -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">儀表板</h2>
+                    <button id="clear-dashboard" class="btn btn-outline-danger">
+                        <i class="bi bi-trash"></i> 清除所有資訊
+                    </button>
+                </div>
+
+                <!-- 統計資訊卡片 -->
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#stats-card">
+                        <div>
+                            <i class="bi bi-graph-up me-2"></i> 統計資訊
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="stats-card">
+                        <div class="stats-grid">
+                            <div class="stats-item">
+                                <div class="stats-number" id="client-count">0</div>
+                                <div class="stats-label">已連接客戶端</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-number" id="topic-count">0</div>
+                                <div class="stats-label">活動主題</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-number" id="message-count">0</div>
+                                <div class="stats-label">消息數量</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-number" id="uptime">00:00:00</div>
+                                <div class="stats-label">運行時間</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系統資訊卡片 -->
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#system-card">
+                        <div>
+                            <i class="bi bi-hdd-network me-2"></i> 系統資訊
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="system-card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>IP 地址:</strong>
+                                <ul class="list-unstyled ms-3" id="ip-list">
+                                    <!-- IP 信息將動態添加 -->
+                                </ul>
+                            </div>
+                            <div>
+                                <strong>時間:</strong> <span id="current-time"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 最近連接的客戶端卡片 -->
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#clients-card">
+                        <div>
+                            <i class="bi bi-people-fill me-2"></i> 最近連接的客戶端
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="clients-card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>用戶名</th>
+                                            <th>連接時間</th>
+                                            <th>狀態</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-clients">
+                                        <!-- 客戶端信息將動態添加 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主題訊息卡片 -->
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#topics-card">
+                        <div>
+                            <i class="bi bi-chat-dots me-2"></i> 主題訊息
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="topics-card">
+                        <div class="card-body p-0">
+                            <div class="row">
+                                <div class="col-md-4 border-end">
+                                    <div class="p-3">
+                                        <h6 class="mb-3">主題列表</h6>
+                                        <div id="topic-list" class="list-group">
+                                            <!-- 主題列表將動態添加 -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="p-3">
+                                        <h6 class="mb-3">最新訊息</h6>
+                                        <div id="topic-messages" class="message-container">
+                                            <div class="text-center text-muted">
+                                                <i class="bi bi-arrow-left-circle"></i> 請選擇一個主題查看其消息
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 最新日誌卡片 -->
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#logs-card">
+                        <div>
+                            <i class="bi bi-journal-text me-2"></i> 最新日誌
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse show" id="logs-card">
+                        <div class="log-container" id="dashboard-logs">
+                            <!-- 日誌將動態添加 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 消息瀏覽 -->
+            <div class="tab-pane fade" id="messages-tab" role="tabpanel">
+                <h2 class="mb-4">消息瀏覽</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-diagram-3 me-2"></i> 主題樹
+                            </div>
+                            <div class="card-body">
+                                <div class="tree-container" id="topic-tree">
+                                    <!-- 主題樹將動態添加 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card h-100 d-flex flex-column">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-chat-dots me-2"></i> 消息內容 - <span id="selected-topic">未選擇主題</span>
+                                </div>
+                                <div>
+                                    <span class="me-3 text-muted">最多 100 條消息</span>
+                                    <button id="clear-messages" class="btn btn-sm btn-outline-light">
+                                        <i class="bi bi-trash"></i> 清空
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body flex-grow-1 p-0">
+                                <div class="message-container d-flex flex-column" id="message-content">
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-arrow-left-circle"></i> 請從左側選擇一個主題查看其消息
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 客戶端 -->
+            <div class="tab-pane fade" id="clients-tab" role="tabpanel">
+                <h2 class="mb-4">客戶端</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-people-fill me-2"></i> 已連接客戶端
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>客戶端 ID</th>
+                                        <th>用戶名</th>
+                                        <th>連接時間</th>
+                                        <th>狀態</th>
+                                        <th>訂閱的主題</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="client-list">
+                                    <!-- 客戶端信息將動態添加 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日誌 -->
+            <div class="tab-pane fade" id="logs-tab" role="tabpanel">
+                <h2 class="mb-4">日誌</h2>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-journal-text me-2"></i> 系統日誌
+                        </div>
+                        <div>
+                            <button id="clear-logs" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-trash"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <div class="log-container" id="log-content">
+                        <!-- 日誌將動態添加 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 設置 -->
+            <div class="tab-pane fade" id="settings-tab" role="tabpanel">
+                <h2 class="mb-4">設置</h2>
+                
+                <!-- Broker 設置 -->
+                <div class="form-section">
+                    <h4 class="mb-3">Broker 設置</h4>
+                    <form id="config-form">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="broker-host" class="form-label">監聽地址</label>
+                                <input type="text" class="form-control" id="broker-host" name="broker.host" value="{{ config.broker.host }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="broker-port" class="form-label">監聽端口</label>
+                                <input type="number" class="form-control" id="broker-port" name="broker.port" value="{{ config.broker.port }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="max-connections" class="form-label">最大連接數</label>
+                                <input type="number" class="form-control" id="max-connections" name="broker.max_connections" value="{{ config.broker.max_connections }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="keep-alive" class="form-label">保持連接時間 (秒)</label>
+                                <input type="number" class="form-control" id="keep-alive" name="mqtt.keep_alive" value="{{ config.mqtt.keep_alive }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="allow-anonymous" name="mqtt.allow_anonymous" {% if config.mqtt.allow_anonymous %}checked{% endif %}>
+                            <label class="form-check-label" for="allow-anonymous">允許匿名連接</label>
+                        </div>
+                        
+                        <button type="button" id="save-config" class="btn btn-primary">保存設置</button>
+                    </form>
+                </div>
+                
+                <!-- 用戶管理 -->
+                <div class="form-section">
+                    <h4 class="mb-3">用戶管理</h4>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="bi bi-person-plus"></i> 添加用戶
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>用戶名</th>
+                                    <th>密碼</th>
+                                    <th>權限</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-list">
+                                <!-- 用戶信息將動態添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用戶模態框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">添加用戶</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-user-form">
+                        <div class="mb-3">
+                            <label for="new-username" class="form-label">用戶名</label>
+                            <input type="text" class="form-control" id="new-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-password" class="form-label">密碼</label>
+                            <input type="password" class="form-control" id="new-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">權限</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="perm-read" checked>
+                                <label class="form-check-label" for="perm-read">
+                                    讀取 (訂閱)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="perm-write" checked>
+                                <label class="form-check-label" for="perm-write">
+                                    寫入 (發布)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="perm-admin">
+                                <label class="form-check-label" for="perm-admin">
+                                    管理員
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="save-new-user">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 依賴 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- 頁尾 -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h6 class="text-muted mb-0">本系統建置使用以下項目，感謝以下開源專案：</h6>
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item">
+                            <a href="https://jquery.com/" target="_blank" class="text-muted">jQuery 3.6.0</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://getbootstrap.com/" target="_blank" class="text-muted">Bootstrap 5.2.3</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://socket.io/" target="_blank" class="text-muted">Socket.IO 4.0.1</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://www.chartjs.org/" target="_blank" class="text-muted">Chart.js 3.5.1</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://fontawesome.com/" target="_blank" class="text-muted">Font Awesome</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://icons.getbootstrap.com/" target="_blank" class="text-muted">Bootstrap Icons</a>
+                        </li>
+                    </ul>
+                    <ul class="list-inline mb-0 mt-2">
+                        <li class="list-inline-item">
+                            <a href="https://www.python.org/" target="_blank" class="text-muted">Python 3</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://flask.palletsprojects.com/" target="_blank" class="text-muted">Flask</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://pypi.org/project/netifaces/" target="_blank" class="text-muted">netifaces</a>
+                        </li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item">
+                            <a href="https://pypi.org/project/Flask-SocketIO/" target="_blank" class="text-muted">Flask-SocketIO</a>
+                        </li>
+                    </ul>
+                    <h6 class="text-muted mb-0">此系統僅供教學與測試使用，不適用於商業用途。</h6>
+                    <a href="https://github.com/calebweixun/pyflaskMQTTbroker" target="_blank" class="text-muted">calebweixun/pyflaskMQTTbroker</a>
+               </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 

@@ -1,0 +1,36 @@
+{
+    "users": [
+        {
+            "username": "user",
+            "password": "password",
+            "permissions": [
+                "read",
+                "write"
+            ]
+        },
+        {
+            "username": "test",
+            "password": "test",
+            "permissions": [
+                "read",
+                "write"
+            ]
+        },
+        {
+            "username": "admin",
+            "password": "admin123",
+            "permissions": [
+                "read",
+                "write",
+                "admin"
+            ]
+        },
+        {
+            "username": "readonly",
+            "password": "read123",
+            "permissions": [
+                "read"
+            ]
+        }
+    ]
+}
