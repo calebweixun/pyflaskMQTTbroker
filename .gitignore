@@ -1,0 +1,23 @@
+# 配置文件
+config.json
+users.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虛擬環境
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.code-workspace
+
+# 日誌文件
+*.log 

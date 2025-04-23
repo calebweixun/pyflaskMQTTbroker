@@ -5,12 +5,14 @@
 ## 技術棧
 
 ### 核心技術
+
 - Python 3.7+
 - MQTT 協議
 - Flask Web 框架
 - WebSocket 即時通訊
 
 ### 主要套件
+
 - paho-mqtt: MQTT 客戶端實現
 - aiorun: 異步運行支持
 - pymongo: MongoDB 數據庫支持
@@ -21,6 +23,7 @@
 - python-dotenv: 環境變量管理
 
 ### 前端技術
+
 - HTML5
 - CSS3
 - JavaScript
@@ -49,12 +52,14 @@
 ## 安裝
 
 1. 克隆專案：
+
 ```bash
-git clone https://github.com/yourusername/pyflaskMQTTbroker.git
+git clone https://github.com/calebweixun/pyflaskMQTTbroker.git
 cd pyflaskMQTTbroker
 ```
 
 2. 安裝必要的依賴：
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -180,4 +185,4 @@ pyflaskMQTTbroker/
 
 ## 聯絡方式
 
-如有任何問題或建議，請通過 GitHub Issues 提交。 
+如有任何問題或建議，請通過 GitHub Issues 提交。
