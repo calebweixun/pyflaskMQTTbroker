@@ -16,8 +16,14 @@ function scrollMessagesToBottom() {
 
 // 初始化頁面
 $(document).ready(function () {
-    // 連接到Socket.IO
-    socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+    // 連接到Socket.IO，添加重連設置
+    socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port, {
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000
+    });
 
     // 設置Socket事件
     setupSocketEvents();
@@ -630,7 +636,9 @@ function updateSystemInfo(data) {
     $('#ip-list').empty();
     if (data.ip_addresses && data.ip_addresses.length > 0) {
         data.ip_addresses.forEach(function (item) {
-            $('#ip-list').append($('<li></li>').text(item.interface + ': ' + item.ip));
+            // 只顯示 IP 地址，不顯示 GUID
+            const ipAddress = item.ip.split(':').pop().trim();
+            $('#ip-list').append($('<li></li>').text(ipAddress));
         });
     } else {
         $('#ip-list').append($('<li></li>').text('無可用IP地址'));

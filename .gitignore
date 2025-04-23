@@ -21,3 +21,4 @@ ENV/
 
 # 日誌文件
 *.log 
+.DS_Store
