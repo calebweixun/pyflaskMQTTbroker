@@ -500,8 +500,7 @@ function addLogEntry(time, level, message) {
     }
 
     let logEntry = $('<div class="log-entry"></div>');
-    logEntry.append($('<span class="log-time"></span>').text(time));
-    logEntry.append($('<span class="' + logClass + '"></span>').text(level + ': ' + message));
+    logEntry.append($('<span class="' + logClass + '"></span>').text(message));
 
     // 檢查是否在底部
     let logContent = $('#log-content');

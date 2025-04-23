@@ -64,6 +64,25 @@ cd pyflaskMQTTbroker
 pip install -r requirements.txt
 ```
 
+### Windows 系統特別注意事項
+
+在 Windows 系統上安裝 `netifaces` 套件時，可能會遇到編譯錯誤。這是因為 `netifaces` 需要編譯 C 擴展。解決方法如下：
+
+1. 安裝 Microsoft Visual C++ Build Tools：
+
+   - 下載並安裝 [Microsoft Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+   - 安裝時選擇 "Desktop development with C++" 和「各別元件」中的 "MSVC v143 - VS 2022 C++ x64/x86 build tools"
+2. 或者，您也可以從以下網站下載預編譯的 wheel 檔案：
+   [https://www.lfd.uci.edu/~gohlke/pythonlibs/#netifaces](https://www.lfd.uci.edu/~gohlke/pythonlibs/#netifaces)
+
+   下載後使用以下命令安裝：
+
+   ```bash
+   pip install netifaces‑0.11.0‑cp39‑cp39‑win_amd64.whl
+   ```
+
+   （請根據您的 Python 版本選擇正確的 wheel 檔案）
+
 ## 快速開始
 
 ### 啟動 MQTT Broker

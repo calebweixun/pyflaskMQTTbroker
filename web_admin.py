@@ -319,7 +319,6 @@ def process_log_line(line):
 
     # 添加到日誌緩衝區
     log_entry = {
-        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'level': 'INFO' if '[錯誤]' not in line else 'ERROR',
         'message': line
     }
